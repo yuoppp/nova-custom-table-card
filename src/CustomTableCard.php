@@ -4,9 +4,11 @@ namespace Mako\CustomTableCard;
 
 use Laravel\Nova\Card;
 use Laravel\Nova\Makeable;
+use Laravel\Nova\Metrics\Metric;
+
 use function in_array;
 
-class CustomTableCard extends Card
+class CustomTableCard extends Metric
 {
     use Makeable;
 
@@ -26,6 +28,13 @@ class CustomTableCard extends Card
      */
     public $width = 'full';
 
+    /**
+     * Integration with nemrutco/nova-global-filter
+     *
+     * @var bool
+     */
+    public $watchGlobalFilter = false;
+
     public function __construct(array $header = [], array $data = [], string $title = '', array $viewall = [])
     {
         parent::__construct();
@@ -33,10 +42,11 @@ class CustomTableCard extends Card
         self::$instanceCount++;
 
         $this->withMeta([
-            'header'    =>  $this->_convertToArray($header),
-            'rows'      =>  $this->_convertToArray($data),
-            'title'     =>  $title,
-            'viewall'   =>  $viewall,
+            'header'            =>  $this->_convertToArray($header),
+            'rows'              =>  $this->_convertToArray($data),
+            'title'             =>  $title,
+            'viewall'           =>  $viewall,
+            'globalFilterable'  => $this->watchGlobalFilter,
         ]);
     }
 
@@ -60,7 +70,14 @@ class CustomTableCard extends Card
         return $this->withMeta(['viewall' => $viewall]);
     }
 
-    private function _convertToArray(array $data) : array
+    public function watchGlobalFilter(bool $watch = true): self
+    {
+        $this->watchGlobalFilter = $watch;
+        $this->withMeta(['globalFilterable' => $this->watchGlobalFilter]);
+        return $this;
+    }
+
+    protected function _convertToArray(array $data) : array
     {
         return collect($data)
             ->map(function ($value) {
